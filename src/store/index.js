@@ -3,15 +3,11 @@ import Vuex from 'vuex'
 
 Vue.use(Vuex)
 
-
 export default new Vuex.Store({
   state: {
-    mock:require('../assets/mock.json')
+    mock: require('../assets/mock.json'),
   },
-  mutations: {
-  },
-  actions: {
-  },
-  modules: {
-  }
+  mutations: {},
+  actions: {},
+  modules: {},
 })
