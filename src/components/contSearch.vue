@@ -24,6 +24,16 @@
           v-model="entry"
           prepend-inner-icon="mdi-magnify"
         ></v-text-field>
+        <v-autocomplete
+          :solo="spiSearch"
+          placeholder="Veuillez entrer un nom de famille ou un SPI"
+          cols="3"
+          hide-no-data
+          @keypress="startType($event)"
+          :items="$store.state.mock.map((user) => user.firstName)"
+          v-model="entry"
+          prepend-inner-icon="mdi-magnify"
+        ></v-autocomplete>
       </v-col>
       <v-col>
         <v-spacer></v-spacer>
