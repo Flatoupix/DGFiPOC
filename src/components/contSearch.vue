@@ -20,20 +20,10 @@
           cols="3"
           hide-no-data
           @keypress="startType($event)"
-          :items="spiSearch ? filteredAutoCompleteItems : []"
           v-model="entry"
           prepend-inner-icon="mdi-magnify"
+          clearable
         ></v-text-field>
-        <v-autocomplete
-          :solo="spiSearch"
-          placeholder="Veuillez entrer un nom de famille ou un SPI"
-          cols="3"
-          hide-no-data
-          @keypress="startType($event)"
-          :items="$store.state.mock.map((user) => user.firstName)"
-          v-model="entry"
-          prepend-inner-icon="mdi-magnify"
-        ></v-autocomplete>
       </v-col>
       <v-col>
         <v-spacer></v-spacer>
@@ -41,43 +31,24 @@
     </v-row>
     <v-row class="mt-8">
       <v-col>
-        <v-data-table
-          height="500"
+        <profile-datas
           v-if="spiSearch === true"
           :headers="filteredHeaderBySPI"
           :items="filteredItemsBySPI"
-          :class="tableClass"
-          :no-data-text="noDataText"
-          :no-results-text="noResultText"
-          hide-default-footer
-          fixed-header
-          disable-pagination
-        ></v-data-table>
-        <v-data-table
-          height="500"
+          @click:row="refreshRow($event)"
+        ></profile-datas>
+        <profile-datas
           v-if="spiSearch === false"
           :headers="filteredHeaderByName"
           :items="filteredItemsByName"
-          :class="tableClass"
-          :no-data-text="noDataText"
-          :no-results-text="noResultText"
-          hide-default-footer
-          fixed-header
-          disable-pagination
-        ></v-data-table>
-        <v-data-table
-          height="500"
+          @click:row="refreshRow($event)"
+        ></profile-datas>
+        <profile-datas
           v-if="spiSearch === null"
           :headers="itemsHeaders"
           :items="$store.state.mock"
-          :class="tableClass"
-          :no-data-text="noDataText"
-          :no-results-text="noResultText"
-          hide-default-footer
-          fixed-header
-          disable-pagination
           @click:row="refreshRow($event)"
-        ></v-data-table>
+        ></profile-datas>
       </v-col>
     </v-row>
   </v-container>
@@ -85,10 +56,12 @@
 
 <script>
 import fileView from './fileView'
+import profileDatas from './profileDatas.vue'
 
 export default {
   components: {
     fileView,
+    profileDatas,
   },
   data() {
     return {
@@ -130,9 +103,7 @@ export default {
           value: 'adress',
         },
       ],
-      tableClass: 'mx-auto',
-      noDataText: "Il n'y a aucune donnée à afficher.",
-      noResultText: 'Désolé mais aucun résultat ne correspond à votre recherche.',
+
       currentRow: null,
     }
   },
@@ -161,20 +132,31 @@ export default {
   },
   watch: {
     entry() {
-      if (this.entry === '') this.spiSearch = null
+      if (this.entry === '' || this.entry === null) this.spiSearch = null
     },
   },
   computed: {
     filteredAutoCompleteItems() {
       let buffer = []
-      this.$store.state.mock.forEach((user) => buffer.push(user.spi))
+      if (this.spiSearch === false) {
+        this.$store.state.mock.forEach((user) => {
+          buffer.push(user.firstName + ' ' + user.lastName)
+        })
+      } else if (this.spiSearch === true) {
+        buffer = this.$store.state.mock.map((user) => user.spi)
+      }
       return buffer
     },
     filteredHeaderByName() {
-      return this.itemsHeaders.filter((header) => header.text == 'SPI' || header.text == 'Situation')
+      return this.itemsHeaders.filter(
+        (header) =>
+          header.text == 'Nom' || header.text == 'Prénom' || header.text == 'SPI' || header.text == 'Situation'
+      )
     },
     filteredHeaderBySPI() {
-      return this.itemsHeaders.filter((header) => header.text == 'Nom' || header.text == 'Prénom')
+      return this.itemsHeaders.filter(
+        (header) => header.text == 'SPI' || header.text == 'Nom' || header.text == 'Prénom'
+      )
     },
     filteredItemsBySPI() {
       return this.$store.state.mock.filter((user) => user.spi.toString().startsWith(this.entry))
@@ -185,7 +167,6 @@ export default {
           user.lastName.toString().toLowerCase().indexOf(this.entry) !== -1 ||
           user.lastName.toString().startsWith(this.entry)
       )
-      // return this.$store.state.mock.filter((user) => user.lastName.toString().startsWith(this.entry))
     },
   },
 }
